@@ -1,12 +1,9 @@
 import { SlashCommandBuilder } from "discord.js";
-import { getOrCreateAccount } from "../handlers/accounts.js";
 import { updateUserRank } from "../handlers/donate.js";
 import { log } from "../handlers/log.js";
-import {
-  EphemeralMessageResponse,
-  validateAmountAndBalance,
-  validateRelaysStatus,
-} from "../utils/helperFunctions.js";
+import { EphemeralMessageResponse } from "../utils/helperFunctions.js";
+
+import { zap } from "../handlers/zap.js";
 
 // Creates an object with the data required by Discord's API to create a SlashCommand
 const create = () => {
@@ -40,7 +37,6 @@ const invoke = async (interaction) => {
 
     await interaction.deferReply({ ephemeral: true });
 
-    await validateRelaysStatus();
     const receiver = interaction.options.get(`user`);
     const amount = parseInt(interaction.options.get(`monto`).value);
 
@@ -49,26 +45,30 @@ const invoke = async (interaction) => {
       "info"
     );
 
-    if (amount <= 0)
-      return EphemeralMessageResponse(
-        interaction,
-        "No se permiten saldos negativos"
-      );
-
-    const msatsAmount = amount * 1000;
+    /*if (amount <= 0)
+    return EphemeralMessageResponse(
+    interaction,
+    "No se permiten saldos negativos"
+    );
+    
+    const msatsAmount = amount * 1000;*/
 
     const receiverData = await interaction.guild.members.fetch(
       receiver.user.id
     );
 
-    const senderWallet = await getOrCreateAccount(user.id, user.username);
+    const zapMessage = interaction.options.get(`message`)
+      ? interaction.options.get(`message`).value
+      : `${user.username} te envío ${amount} sats a través de discord`;
+
+    /*const senderWallet = await getOrCreateAccount(user.id, user.username);
 
     const receiverWallet = await getOrCreateAccount(
       receiverData.user.id,
       receiverData.user.username
-    );
+    );*/
 
-    if (!senderWallet || !receiverWallet)
+    /*if (!senderWallet || !receiverWallet)
       return EphemeralMessageResponse(
         interaction,
         "Ocurrió un error al obtener la información del usuario"
@@ -78,27 +78,21 @@ const invoke = async (interaction) => {
       return EphemeralMessageResponse(
         interaction,
         "No puedes enviarte sats a vos mismo."
-      );
+      );*/
 
-    const senderBalance = await senderWallet.getBalance("BTC");
+    /*const senderBalance = await senderWallet.getBalance("BTC");
     const isValidAmount = validateAmountAndBalance(
       amount,
       senderBalance / 1000
     );
 
     if (!isValidAmount.status)
-      return EphemeralMessageResponse(interaction, isValidAmount.content);
+      return EphemeralMessageResponse(interaction, isValidAmount.content);*/
 
-    const message = interaction.options.get(`message`)
-      ? interaction.options.get(`message`)
-      : {
-          value: `${user.username} te envío ${amount} sats a través de discord`,
-        };
-
-    const invoiceDetails = await receiverWallet.generateInvoice({
+    /*const invoiceDetails = await receiverWallet.generateInvoice({
       milisatoshis: msatsAmount,
       comment: message.value,
-    });
+    });*/
 
     const onSuccess = async () => {
       try {
@@ -120,9 +114,30 @@ const invoke = async (interaction) => {
       }
     };
 
-    log(`@${user.username} va a pagar la factura ${invoiceDetails.pr}`, "info");
+    const onError = () => {
+      log(
+        `@${user.username} tuvo un error al realizar el pago del zap hacia @${receiver.user.username}`,
+        "err"
+      );
 
-    await senderWallet.payInvoice({
+      EphemeralMessageResponse(interaction, "Ocurrió un error");
+    };
+
+    const { success, message } = await zap(
+      user,
+      receiverData.user,
+      amount,
+      onSuccess,
+      onError,
+      zapMessage
+    );
+    if (!success) {
+      return EphemeralMessageResponse(interaction, message);
+    }
+
+    //log(`@${user.username} va a pagar la factura ${invoiceDetails.pr}`, "info");
+
+    /*await senderWallet.payInvoice({
       paymentRequest: invoiceDetails.pr,
       onSuccess,
       onError: () => {
@@ -133,7 +148,7 @@ const invoke = async (interaction) => {
 
         EphemeralMessageResponse(interaction, "Ocurrió un error");
       },
-    });
+    });*/
   } catch (err) {
     log(
       `Error en el comando /zap ejecutado por @${interaction.user.username} - Código de error ${err.code} Mensaje: ${err.message}`,
