@@ -45,14 +45,6 @@ const invoke = async (interaction) => {
       "info"
     );
 
-    /*if (amount <= 0)
-    return EphemeralMessageResponse(
-    interaction,
-    "No se permiten saldos negativos"
-    );
-    
-    const msatsAmount = amount * 1000;*/
-
     const receiverData = await interaction.guild.members.fetch(
       receiver.user.id
     );
@@ -60,39 +52,6 @@ const invoke = async (interaction) => {
     const zapMessage = interaction.options.get(`message`)
       ? interaction.options.get(`message`).value
       : `${user.username} te envío ${amount} sats a través de discord`;
-
-    /*const senderWallet = await getOrCreateAccount(user.id, user.username);
-
-    const receiverWallet = await getOrCreateAccount(
-      receiverData.user.id,
-      receiverData.user.username
-    );*/
-
-    /*if (!senderWallet || !receiverWallet)
-      return EphemeralMessageResponse(
-        interaction,
-        "Ocurrió un error al obtener la información del usuario"
-      );
-
-    if (senderWallet.pubkey === receiverWallet.pubkey)
-      return EphemeralMessageResponse(
-        interaction,
-        "No puedes enviarte sats a vos mismo."
-      );*/
-
-    /*const senderBalance = await senderWallet.getBalance("BTC");
-    const isValidAmount = validateAmountAndBalance(
-      amount,
-      senderBalance / 1000
-    );
-
-    if (!isValidAmount.status)
-      return EphemeralMessageResponse(interaction, isValidAmount.content);*/
-
-    /*const invoiceDetails = await receiverWallet.generateInvoice({
-      milisatoshis: msatsAmount,
-      comment: message.value,
-    });*/
 
     const onSuccess = async () => {
       try {
@@ -134,21 +93,6 @@ const invoke = async (interaction) => {
     if (!success) {
       return EphemeralMessageResponse(interaction, message);
     }
-
-    //log(`@${user.username} va a pagar la factura ${invoiceDetails.pr}`, "info");
-
-    /*await senderWallet.payInvoice({
-      paymentRequest: invoiceDetails.pr,
-      onSuccess,
-      onError: () => {
-        log(
-          `@${user.username} tuvo un error al realizar el pago del zap hacia @${receiver.user.username}`,
-          "err"
-        );
-
-        EphemeralMessageResponse(interaction, "Ocurrió un error");
-      },
-    });*/
   } catch (err) {
     log(
       `Error en el comando /zap ejecutado por @${interaction.user.username} - Código de error ${err.code} Mensaje: ${err.message}`,
