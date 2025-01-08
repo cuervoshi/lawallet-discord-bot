@@ -12,8 +12,7 @@ async function invoke(reaction, user) {
       try {
         await user.fetch();
       } catch (err) {
-        console.error(err);
-        return;
+        throw new Error("Fetch partial user error: " + err);
       }
     }
 
@@ -23,28 +22,24 @@ async function invoke(reaction, user) {
       try {
         await reaction.fetch();
       } catch (error) {
-        console.error(
-          "Ocurrió un error al intentar recuperar el mensaje:",
-          error
-        );
-        return;
+        throw new Error("Fetch partial message error: " + err);
       }
     }
 
     let amount = 0;
     switch (reaction.emoji.name) {
       case "⚡":
-        console.log(
-          `${user.username} reaccionó con ⚡ al mensaje: "${reaction.message.content}"`
+        log(
+          `${user.username} reaccionó con ⚡ al mensaje: "${reaction.message.content}"`,
+          "info"
         );
-        // Zap de 21 sats
         amount = 21;
         break;
       case "🚀":
-        console.log(
-          `${user.username} reaccionó con 🚀 al mensaje: "${reaction.message.content}"`
+        log(
+          `${user.username} reaccionó con 🚀 al mensaje: "${reaction.message.content}"`,
+          "info"
         );
-        // Zap de 210 sats
         amount = 210;
         break;
     }
@@ -90,8 +85,11 @@ async function invoke(reaction, user) {
 
     if (!success) TimedMessage(message, reaction.message.channel, 5000);
   } catch (err) {
-    console.log("Error al enviar zap por reacción");
-    console.log(err);
+    log(
+      `Error al enviar zap por reacción del usuario @${user.username} a @${reaction.message.author.username} - Código de error ${err.code} Mensaje: ${err.message}`,
+      "err"
+    );
+    TimedMessage("Ocurrió un error", reaction.message.channel, 5000);
   }
 }
 
