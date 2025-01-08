@@ -1,5 +1,5 @@
 import NDK from "@nostr-dev-kit/ndk";
-import { Client, GatewayIntentBits } from "discord.js";
+import { Client, GatewayIntentBits, Partials } from "discord.js";
 import {} from "dotenv/config";
 import fs from "fs";
 import { connect } from "mongoose";
@@ -22,7 +22,13 @@ export const knownRelays = [];
 
 async function runBot() {
   // Create a new Client with the Guilds intent
-  const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+  const client = new Client({
+    intents: [
+      GatewayIntentBits.Guilds,
+      GatewayIntentBits.GuildMessageReactions,
+    ],
+    partials: [Partials.Message, Partials.Channel, Partials.Reaction],
+  });
 
   // Fetch all js files in ./events
   const events = fs

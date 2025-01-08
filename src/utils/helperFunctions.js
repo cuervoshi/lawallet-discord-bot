@@ -55,7 +55,17 @@ const EphemeralMessageResponse = async (Interaction, content) => {
 
   await handleBotResponse(Interaction, objectResponse);
 };
-
+const TimedMessage = (message, channel, duration) => {
+  channel
+    .send(message)
+    .then((m) =>
+      setTimeout(
+        async () => (await channel.messages.fetch(m)).delete(),
+        duration
+      )
+    );
+  return;
+};
 const FollowUpEphemeralResponse = async (Interaction, content) => {
   await Interaction.deleteReply();
 
@@ -174,6 +184,7 @@ async function existIdentity(federation, username) {
 
 export {
   EphemeralMessageResponse,
+  TimedMessage,
   FollowUpEphemeralResponse,
   handleBotResponse,
   publishProfile,
